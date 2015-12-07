@@ -1,6 +1,6 @@
 ---
 # Get YAML keywords from myYAML_ref.Rmd
-title: "DADHosp: HOSPITAL.COST regression:: DADHosp_SLR"
+title: "DADHosp: HOSPITAL.COST regression:: DADHosp_SLR_base"
 author: "bdanalytics"
 
 # Choose one:
@@ -213,8 +213,10 @@ if ((glb_rsp_var != glb_rsp_var_raw) && is.null(glb_map_rsp_raw_to_var))
 glbFeatsExclude <- c(NULL
 #   Feats that shd be excluded due to known causation by prediction variable
 # , "<feat1", "<feat2>"
+    ,"HospCost.cut.fctr"
 #   Feats that are linear combinations (alias in glm)
 #   Feature-engineering phase -> start by excluding all features except id & category & work each one in
+    ,"BODY.WEIGHT"
                     ) 
 if (glb_rsp_var_raw != glb_rsp_var)
     glbFeatsExclude <- union(glbFeatsExclude, glb_rsp_var_raw)                    
@@ -274,6 +276,9 @@ glbFeatsDerive <- list();
 # glbFeatsDerive[["dummy.my"]] <- list(
 #     mapfn = function(UniqueID) { return(UniqueID) }       
 #     , args = c("UniqueID"))    
+glbFeatsDerive[[".recpos"]] <- list(
+    mapfn = function(.rnorm) { return(1:length(.rnorm)) }       
+    , args = c(".rnorm"))    
 
 glbFeatsDerive[["HospCost.cut.fctr"]] <- list(
     mapfn = function(HOSPITAL.COST) { return(cut(HOSPITAL.COST, 5, breaks = c(0, 100000, 200000, 300000, 900000), labels = NULL)) } 
@@ -783,7 +788,7 @@ if (glb_is_classification && glb_is_binomial) {
 glbOutStackFnames <- NULL #: default
     # c("ebayipads_txt_assoc1_out_bid1_stack.csv") # manual stack
     # c("ebayipads_finmdl_bid1_out_nnet_1.csv") # universal stack
-glb_out_pfx <- "DADHosp_SLR_"
+glb_out_pfx <- "DADHosp_SLR_base_"
 glb_save_envir <- FALSE # or TRUE
 
 # Depict process
@@ -1057,7 +1062,7 @@ if (nrow(dupObsAll) > 0) {
     #mydspObs(list(productline.contains="iPad 1", storage.contains="16", color.contains="Black", carrier.contains="None", cellular.contains="0", condition.contains="Used", startprice=80), cols=c("productline", "storage", "color", "carrier", "cellular", "condition", "startprice", "sold"))
 
     print("Test & Train Groups:")
-stop("here"); print("Fix this ...")    
+stop("aargh!!! here"); print("Fix this ...")    
     #print(subset(dupgrps_df, (<gsb_rsp_var_raw>.NA > 0)))
 
     glbFeatsExclude <- c(".grpid", glbFeatsExclude)
@@ -2831,17 +2836,25 @@ if (!is.null(glbFeatsCategory)) {
                                            glbFeatsCategory)
     names(newobs_ctgry_df) <- 
         gsub(".n", ".n.Tst", names(newobs_ctgry_df), fixed = TRUE)
+
     OOBobs_ctgry_df <- mycreate_sqlxtab_df(subset(glbObsAll, .lcn == "OOB"), 
                                            glbFeatsCategory)
     names(OOBobs_ctgry_df) <- 
         gsub(".n", ".n.OOB", names(OOBobs_ctgry_df), fixed = TRUE)
-    fitobs_ctgry_df <- mycreate_sqlxtab_df(subset(glbObsAll, .lcn == "Fit"), 
-                                           glbFeatsCategory)
-    names(fitobs_ctgry_df) <- 
-        gsub(".n", ".n.Fit", names(fitobs_ctgry_df), fixed = TRUE)
     
-#     glbLvlCategory <- merge(newobs_ctgry_df, OOBobs_ctgry_df, by=glbFeatsCategory
-#                           , all=TRUE, suffixes=c(".Tst", ".OOB"))
+    if (nrow(subset(glbObsAll, .lcn == "Fit")) == 0) {
+        # Fit same as OOB
+        OOBobs_ctgry_df$.n.OOB <- OOBobs_ctgry_df$.n.OOB / 2;
+        fitobs_ctgry_df <- OOBobs_ctgry_df
+        names(fitobs_ctgry_df) <- 
+            gsub(".n.OOB", ".n.Fit", names(fitobs_ctgry_df), fixed = TRUE)
+    } else {
+        fitobs_ctgry_df <- mycreate_sqlxtab_df(subset(glbObsAll, .lcn == "Fit"), 
+                                               glbFeatsCategory)
+        names(fitobs_ctgry_df) <- 
+            gsub(".n", ".n.Fit", names(fitobs_ctgry_df), fixed = TRUE)
+    }
+    
     glbLvlCategory <- merge(fitobs_ctgry_df, OOBobs_ctgry_df, by = glbFeatsCategory
                           , all = TRUE)
     glbLvlCategory <- merge(glbLvlCategory, newobs_ctgry_df, by = glbFeatsCategory
@@ -2919,8 +2932,11 @@ row.names(not_nrml_feats_df) <- not_nrml_feats_df$id
 #pltTrnObs <- glbObsTrn[, c("D.npnct05.log", ".rnorm")]
 pltTrnObs <- glbObsTrn[, c(union(".rnorm",
                         not_nrml_feats_df$id[1:min(5, nrow(not_nrml_feats_df))]),
-                            glb_cluster_entropy_var)]
-gp <- myplot_violin(pltTrnObs, 
+                            glb_cluster_entropy_var), FALSE]
+if (is.null(glb_cluster_entropy_var))
+    gp <- myplot_violin(pltTrnObs, 
+                    setdiff(names(pltTrnObs), glb_cluster_entropy_var)) else
+    gp <- myplot_violin(pltTrnObs, 
                     setdiff(names(pltTrnObs), glb_cluster_entropy_var), 
                     xcol_name = glb_cluster_entropy_var)
 if ("variable" %in% names(pltTrnObs))
@@ -3116,6 +3132,8 @@ get_dsp_models_df <- function() {
     }
     dev.off()
 
+    if (all(row.names(dsp_models_df) != dsp_models_df$id))
+        row.names(dsp_models_df) <- dsp_models_df$id
     return(dsp_models_df)
 }
 #get_dsp_models_df()
@@ -4713,19 +4731,27 @@ if (glb_is_regression) {
             glb_models_df[glb_models_df$id == glb_sel_mdl_id, "min.RMSE.OOB"]))
 
     if (!is.null(glbFeatsCategory)) {
-        tmp_OOBobs_df <- glbObsOOB[, c(glbFeatsCategory, glb_rsp_var,
-                                           predct_error_var_name)]
-        names(tmp_OOBobs_df)[length(names(tmp_OOBobs_df))] <- "error.abs.OOB"
-        sOOB_ctgry_df <- dplyr::group_by_(tmp_OOBobs_df, glbFeatsCategory)
-        sOOB_ctgry_df <- dplyr::count(sOOB_ctgry_df, 
-                                      startprice.log10.abs.OOB.sum = sum(abs(startprice.log10)),
-                                        err.abs.OOB.sum = sum(error.abs.OOB),
-                                        err.abs.OOB.mean = mean(error.abs.OOB))
-        names(sOOB_ctgry_df)[4] <- ".n.OOB"
-        sOOB_ctgry_df <- dplyr::ungroup(sOOB_ctgry_df)
-        #intersect(names(glbLvlCategory), names(sOOB_ctgry_df))
-        glbLvlCategory <- merge(glbLvlCategory, sOOB_ctgry_df, all=TRUE)
-        print(orderBy(~-err.abs.OOB.mean, glbLvlCategory))
+        glbLvlCategory <- merge(glbLvlCategory, 
+            myget_category_stats(obs_df = glbObsTrn, mdl_id = glb_fin_mdl_id, 
+                                 label = "trn"),
+                              by = glbFeatsCategory, all = TRUE)
+        row.names(glbLvlCategory) <- glbLvlCategory[, glbFeatsCategory]
+        
+        glbLvlCategory <- merge(glbLvlCategory, 
+        myget_category_stats(obs_df = glbObsNew, mdl_id = glb_fin_mdl_id,
+                                 label = "new"),
+                              by = glbFeatsCategory, all = TRUE)
+        row.names(glbLvlCategory) <- glbLvlCategory[, glbFeatsCategory]
+        
+        clmnOrder <- sort(setdiff(names(glbLvlCategory), glbFeatsCategory))
+        names(clmnOrder) <- gsub("^err\\.abs\\.(.{3})\\.(.+)", "err\\.abs\\.\\2\\.\\1", clmnOrder)
+        clmnOrder <- clmnOrder[sort(names(clmnOrder))]
+        glbLvlCategory <- glbLvlCategory[, c(glbFeatsCategory, clmnOrder)]
+        if (any(grepl("OOB", glbMdlMetricsEval)))
+            print(orderBy(~-err.abs.OOB.mean, glbLvlCategory[, -1])) else
+            print(orderBy(~-err.abs.fit.mean, glbLvlCategory[, -1]))
+        print(colSums(glbLvlCategory[, -grep(glbFeatsCategory,
+                                           names(glbLvlCategory))]))
     }
     
     if ((glb_rsp_var %in% names(glbObsNew)) &&
