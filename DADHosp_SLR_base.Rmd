@@ -141,6 +141,7 @@ require(dplyr)
 
 # Analysis control global variables
 # Inputs
+#   url/name = "<obsTrnFileName>"; sep = choose from c(NULL, "\t")
 glbObsTrnFile <- list(url = NULL, name = "DADHosp_Cost.txt", sep = "\t")
 glbObsNewFileName <- "<obsNewFileName>"
 glbInpMerge <- NULL #: default
@@ -273,10 +274,7 @@ glbFeatsDerive <- list();
 
     # numeric
 # Create feature based on record position/id in data   
-# glbFeatsDerive[["dummy.my"]] <- list(
-#     mapfn = function(UniqueID) { return(UniqueID) }       
-#     , args = c("UniqueID"))    
-glbFeatsDerive[[".recpos"]] <- list(
+glbFeatsDerive[[".pos"]] <- list(
     mapfn = function(.rnorm) { return(1:length(.rnorm)) }       
     , args = c(".rnorm"))    
 
@@ -299,7 +297,8 @@ glbFeatsDerive[["HospCost.cut.fctr"]] <- list(
 #print(summary(glbObsAll$WordCount))
 #print(summary(mapfn(glbObsAll$WordCount)))
     
-#     mapfn = function(Rasmussen) { return(ifelse(sign(Rasmussen) >= 0, 1, 0)) } 
+#     mapfn = function(HOSPI.COST) { return(cut(HOSPI.COST, 5, breaks = c(0, 100000, 200000, 300000, 900000), labels = NULL)) }     
+#     mapfn = function(Rasmussen)  { return(ifelse(sign(Rasmussen) >= 0, 1, 0)) } 
 #     mapfn = function(startprice) { return(startprice ^ (1/2)) }       
 #     mapfn = function(startprice) { return(log(startprice)) }   
 #     mapfn = function(startprice) { return(exp(-startprice / 20)) }
@@ -4729,79 +4728,51 @@ print(subset(get_dsp_models_df(), select = -id))
 if (glb_is_regression) {
     print(sprintf("%s OOB RMSE: %0.4f", glb_sel_mdl_id,
             glb_models_df[glb_models_df$id == glb_sel_mdl_id, "min.RMSE.OOB"]))
-
-    if (!is.null(glbFeatsCategory)) {
-        glbLvlCategory <- merge(glbLvlCategory, 
-            myget_category_stats(obs_df = glbObsTrn, mdl_id = glb_fin_mdl_id, 
-                                 label = "trn"),
-                              by = glbFeatsCategory, all = TRUE)
-        row.names(glbLvlCategory) <- glbLvlCategory[, glbFeatsCategory]
-        
-        glbLvlCategory <- merge(glbLvlCategory, 
-        myget_category_stats(obs_df = glbObsNew, mdl_id = glb_fin_mdl_id,
-                                 label = "new"),
-                              by = glbFeatsCategory, all = TRUE)
-        row.names(glbLvlCategory) <- glbLvlCategory[, glbFeatsCategory]
-        
-        clmnOrder <- sort(setdiff(names(glbLvlCategory), glbFeatsCategory))
-        names(clmnOrder) <- gsub("^err\\.abs\\.(.{3})\\.(.+)", "err\\.abs\\.\\2\\.\\1", clmnOrder)
-        clmnOrder <- clmnOrder[sort(names(clmnOrder))]
-        glbLvlCategory <- glbLvlCategory[, c(glbFeatsCategory, clmnOrder)]
-        if (any(grepl("OOB", glbMdlMetricsEval)))
-            print(orderBy(~-err.abs.OOB.mean, glbLvlCategory[, -1])) else
-            print(orderBy(~-err.abs.fit.mean, glbLvlCategory[, -1]))
-        print(colSums(glbLvlCategory[, -grep(glbFeatsCategory,
-                                           names(glbLvlCategory))]))
-    }
-    
-    if ((glb_rsp_var %in% names(glbObsNew)) &&
-        !(any(is.na(glbObsNew[, glb_rsp_var])))) {
-            pred_stats_df <- 
-                mypredict_mdl(mdl = glb_models_lst[[glb_fin_mdl_id]], 
-                              df = glbObsNew, 
-                              rsp_var = glb_rsp_var, 
-                              label = "new",
-					model_summaryFunction = glb_sel_mdl$control$summaryFunction,
-						      model_metric = glb_sel_mdl$metric,
-						      model_metric_maximize = glb_sel_mdl$maximize,
-						      ret_type = "stats")        
-            print(sprintf("%s prediction stats for glbObsNew:", glb_fin_mdl_id))
-            print(pred_stats_df)
-    }    
-}    
-
-if (glb_is_classification) {
+} else {
     print(sprintf("%s OOB confusion matrix & accuracy: ", glb_sel_mdl_id))
     print(t(confusionMatrix(glbObsOOB[, mygetPredictIds(glb_rsp_var, glb_sel_mdl_id)$value],
                             glbObsOOB[, glb_rsp_var])$table))
+}            
 
-    if (!is.null(glbFeatsCategory)) {
-        glbLvlCategory <- merge(glbLvlCategory, 
-            myget_category_stats(obs_df = glbObsTrn, mdl_id = glb_fin_mdl_id, 
-                                 label = "trn"),
-                              by = glbFeatsCategory, all = TRUE)
-        row.names(glbLvlCategory) <- glbLvlCategory[, glbFeatsCategory]
+if (!is.null(glbFeatsCategory)) {
+    glbLvlCategory <- merge(glbLvlCategory, 
+        myget_category_stats(obs_df = glbObsTrn, mdl_id = glb_fin_mdl_id, 
+                             label = "trn"),
+                          by = glbFeatsCategory, all = TRUE)
+    row.names(glbLvlCategory) <- glbLvlCategory[, glbFeatsCategory]
         
-        glbLvlCategory <- merge(glbLvlCategory, 
-            myget_category_stats(obs_df = glbObsNew, mdl_id = glb_fin_mdl_id,
-                                 label = "new"),
-                              by = glbFeatsCategory, all = TRUE)
-        row.names(glbLvlCategory) <- glbLvlCategory[, glbFeatsCategory]
-        
-        clmnOrder <- sort(setdiff(names(glbLvlCategory), glbFeatsCategory))
-        names(clmnOrder) <- gsub("^err\\.abs\\.(.{3})\\.(.+)", "err\\.abs\\.\\2\\.\\1", clmnOrder)
-        clmnOrder <- clmnOrder[sort(names(clmnOrder))]
-        glbLvlCategory <- glbLvlCategory[, c(glbFeatsCategory, clmnOrder)]
-        if (any(grepl("OOB", glbMdlMetricsEval)))
-            print(orderBy(~-err.abs.OOB.mean, glbLvlCategory[, -1])) else
-            print(orderBy(~-err.abs.fit.mean, glbLvlCategory[, -1]))
-        print(colSums(glbLvlCategory[, -grep(glbFeatsCategory,
-                                           names(glbLvlCategory))]))
-        
-    }
+    glbLvlCategory <- merge(glbLvlCategory, 
+    myget_category_stats(obs_df = glbObsNew, mdl_id = glb_fin_mdl_id,
+                             label = "new"),
+                          by = glbFeatsCategory, all = TRUE)
+    row.names(glbLvlCategory) <- glbLvlCategory[, glbFeatsCategory]
     
-    if ((glb_rsp_var %in% names(glbObsNew)) &&
-        !(any(is.na(glbObsNew[, glb_rsp_var])))) {
+    clmnOrder <- sort(setdiff(names(glbLvlCategory), glbFeatsCategory))
+    names(clmnOrder) <- gsub("^err\\.abs\\.(.{3})\\.(.+)", "err\\.abs\\.\\2\\.\\1", clmnOrder)
+    clmnOrder <- clmnOrder[sort(names(clmnOrder))]
+    glbLvlCategory <- glbLvlCategory[, c(glbFeatsCategory, clmnOrder)]
+    if (any(grepl("OOB", glbMdlMetricsEval)))
+        print(orderBy(~-err.abs.OOB.mean, glbLvlCategory[, -1])) else
+        print(orderBy(~-err.abs.fit.mean, glbLvlCategory[, -1]))
+    print(colSums(glbLvlCategory[, -grep(glbFeatsCategory,
+                                       names(glbLvlCategory))]))
+}
+
+if ((glb_rsp_var %in% names(glbObsNew)) &&
+    !(any(is.na(glbObsNew[, glb_rsp_var])))) {
+    if (glb_is_regression) {    
+        pred_stats_df <- 
+            mypredict_mdl(mdl = glb_models_lst[[glb_fin_mdl_id]], 
+                          df = glbObsNew, 
+                          rsp_var = glb_rsp_var, 
+                          label = "new",
+                model_summaryFunction = glb_sel_mdl$control$summaryFunction,
+                          model_metric = glb_sel_mdl$metric,
+                          model_metric_maximize = glb_sel_mdl$maximize,
+                          ret_type = "stats")        
+        print(sprintf("%s prediction stats for glbObsNew:", glb_fin_mdl_id))
+        print(pred_stats_df)
+    } else {   
         print(sprintf("%s new confusion matrix & accuracy: ", glb_fin_mdl_id))
         print(t(confusionMatrix(glbObsNew[, mygetPredictIds(glb_rsp_var, glb_fin_mdl_id)$value],
                                 glbObsNew[, glb_rsp_var])$table))

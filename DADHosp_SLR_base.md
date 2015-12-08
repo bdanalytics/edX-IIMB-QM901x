@@ -157,6 +157,7 @@ require(dplyr)
 
 # Analysis control global variables
 # Inputs
+#   url/name = "<obsTrnFileName>"; sep = choose from c(NULL, "\t")
 glbObsTrnFile <- list(url = NULL, name = "DADHosp_Cost.txt", sep = "\t")
 glbObsNewFileName <- "<obsNewFileName>"
 glbInpMerge <- NULL #: default
@@ -289,10 +290,7 @@ glbFeatsDerive <- list();
 
     # numeric
 # Create feature based on record position/id in data   
-# glbFeatsDerive[["dummy.my"]] <- list(
-#     mapfn = function(UniqueID) { return(UniqueID) }       
-#     , args = c("UniqueID"))    
-glbFeatsDerive[[".recpos"]] <- list(
+glbFeatsDerive[[".pos"]] <- list(
     mapfn = function(.rnorm) { return(1:length(.rnorm)) }       
     , args = c(".rnorm"))    
 
@@ -315,7 +313,8 @@ glbFeatsDerive[["HospCost.cut.fctr"]] <- list(
 #print(summary(glbObsAll$WordCount))
 #print(summary(mapfn(glbObsAll$WordCount)))
     
-#     mapfn = function(Rasmussen) { return(ifelse(sign(Rasmussen) >= 0, 1, 0)) } 
+#     mapfn = function(HOSPI.COST) { return(cut(HOSPI.COST, 5, breaks = c(0, 100000, 200000, 300000, 900000), labels = NULL)) }     
+#     mapfn = function(Rasmussen)  { return(ifelse(sign(Rasmussen) >= 0, 1, 0)) } 
 #     mapfn = function(startprice) { return(startprice ^ (1/2)) }       
 #     mapfn = function(startprice) { return(log(startprice)) }   
 #     mapfn = function(startprice) { return(exp(-startprice / 20)) }
@@ -858,7 +857,7 @@ glb_chunks_df <- myadd_chunk(NULL, "import.data")
 
 ```
 ##         label step_major step_minor label_minor   bgn end elapsed
-## 1 import.data          1          0           0 9.947  NA      NA
+## 1 import.data          1          0           0 9.558  NA      NA
 ```
 
 ## Step `1.0: import data`
@@ -1025,8 +1024,8 @@ glb_chunks_df <- myadd_chunk(NULL, "import.data")
 
 ```
 ##          label step_major step_minor label_minor    bgn    end elapsed
-## 1  import.data          1          0           0  9.947 14.796   4.849
-## 2 inspect.data          2          0           0 14.796     NA      NA
+## 1  import.data          1          0           0  9.558 15.196   5.638
+## 2 inspect.data          2          0           0 15.196     NA      NA
 ```
 
 ## Step `2.0: inspect data`
@@ -1058,8 +1057,8 @@ glb_chunks_df <- myadd_chunk(NULL, "import.data")
 
 ```
 ##          label step_major step_minor label_minor    bgn    end elapsed
-## 2 inspect.data          2          0           0 14.796 18.025   3.229
-## 3   scrub.data          2          1           1 18.025     NA      NA
+## 2 inspect.data          2          0           0 15.196 18.469   3.273
+## 3   scrub.data          2          1           1 18.469     NA      NA
 ```
 
 ### Step `2.1: scrub data`
@@ -1079,28 +1078,30 @@ glb_chunks_df <- myadd_chunk(NULL, "import.data")
 
 ```
 ##            label step_major step_minor label_minor    bgn    end elapsed
-## 3     scrub.data          2          1           1 18.025 18.944   0.919
-## 4 transform.data          2          2           2 18.945     NA      NA
+## 3     scrub.data          2          1           1 18.469 19.393   0.924
+## 4 transform.data          2          2           2 19.393     NA      NA
 ```
 
 ### Step `2.2: transform data`
 
 ```
-## [1] "Creating new feature: .recpos..."
+## [1] "Creating new feature: .pos..."
 ## [1] "Creating new feature: HospCost.cut.fctr..."
 ```
 
 ```
 ##              label step_major step_minor label_minor    bgn    end elapsed
-## 4   transform.data          2          2           2 18.945 18.992   0.047
-## 5 extract.features          3          0           0 18.992     NA      NA
+## 4   transform.data          2          2           2 19.393 19.438   0.045
+## 5 extract.features          3          0           0 19.439     NA      NA
 ```
 
 ## Step `3.0: extract features`
 
 ```
-##                  label step_major step_minor label_minor   bgn end elapsed
-## 1 extract.features_bgn          1          0           0 19.05  NA      NA
+##                  label step_major step_minor label_minor    bgn end
+## 1 extract.features_bgn          1          0           0 19.493  NA
+##   elapsed
+## 1      NA
 ```
 
 ```
@@ -1108,8 +1109,8 @@ glb_chunks_df <- myadd_chunk(NULL, "import.data")
 ## 1                extract.features_bgn          1          0           0
 ## 2 extract.features_factorize.str.vars          2          0           0
 ##      bgn    end elapsed
-## 1 19.050 19.061   0.011
-## 2 19.061     NA      NA
+## 1 19.493 19.503    0.01
+## 2 19.504     NA      NA
 ```
 
 ```
@@ -1122,8 +1123,8 @@ glb_chunks_df <- myadd_chunk(NULL, "import.data")
 ## 2 extract.features_factorize.str.vars          2          0           0
 ## 3                extract.features_end          3          0           0
 ##      bgn    end elapsed
-## 2 19.061 19.083   0.022
-## 3 19.084     NA      NA
+## 2 19.504 19.524    0.02
+## 3 19.525     NA      NA
 ```
 
 ```
@@ -1131,9 +1132,9 @@ glb_chunks_df <- myadd_chunk(NULL, "import.data")
 ## 2 extract.features_factorize.str.vars          2          0           0
 ## 1                extract.features_bgn          1          0           0
 ##      bgn    end elapsed duration
-## 2 19.061 19.083   0.022    0.022
-## 1 19.050 19.061   0.011    0.011
-## [1] "Total Elapsed Time: 19.083 secs"
+## 2 19.504 19.524    0.02     0.02
+## 1 19.493 19.503    0.01     0.01
+## [1] "Total Elapsed Time: 19.524 secs"
 ```
 
 ![](DADHosp_SLR_base_files/figure-html/extract.features-1.png) 
@@ -1150,10 +1151,10 @@ glb_chunks_df <- myadd_chunk(NULL, "import.data")
 
 ```
 ##                 label step_major step_minor label_minor    bgn    end
-## 5    extract.features          3          0           0 18.992 20.347
-## 6 manage.missing.data          3          1           1 20.348     NA
+## 5    extract.features          3          0           0 19.439 20.762
+## 6 manage.missing.data          3          1           1 20.762     NA
 ##   elapsed
-## 5   1.355
+## 5   1.323
 ## 6      NA
 ```
 
@@ -1186,22 +1187,22 @@ glb_chunks_df <- myadd_chunk(NULL, "import.data")
 ```
 
 ```
-##                 label step_major step_minor label_minor    bgn  end
-## 6 manage.missing.data          3          1           1 20.348 20.8
-## 7        cluster.data          3          2           2 20.801   NA
+##                 label step_major step_minor label_minor    bgn   end
+## 6 manage.missing.data          3          1           1 20.762 21.19
+## 7        cluster.data          3          2           2 21.190    NA
 ##   elapsed
-## 6   0.453
+## 6   0.428
 ## 7      NA
 ```
 
 ## Step `3.2: cluster data`
 
 ```
-##                     label step_major step_minor label_minor    bgn   end
-## 7            cluster.data          3          2           2 20.801 20.85
-## 8 partition.data.training          4          0           0 20.850    NA
+##                     label step_major step_minor label_minor    bgn    end
+## 7            cluster.data          3          2           2 21.190 21.233
+## 8 partition.data.training          4          0           0 21.234     NA
 ##   elapsed
-## 7   0.049
+## 7   0.043
 ## 8      NA
 ```
 
@@ -1269,11 +1270,11 @@ glb_chunks_df <- myadd_chunk(NULL, "import.data")
 ```
 
 ```
-##                     label step_major step_minor label_minor   bgn    end
-## 8 partition.data.training          4          0           0 20.85 20.999
-## 9         select.features          5          0           0 21.00     NA
+##                     label step_major step_minor label_minor    bgn    end
+## 8 partition.data.training          4          0           0 21.234 21.378
+## 9         select.features          5          0           0 21.378     NA
 ##   elapsed
-## 8    0.15
+## 8   0.144
 ## 9      NA
 ```
 
@@ -1283,7 +1284,7 @@ glb_chunks_df <- myadd_chunk(NULL, "import.data")
 ##                                  id      cor.y exclude.as.feat cor.y.abs
 ## HospCost.cut.fctr HospCost.cut.fctr  0.8585462               1 0.8585462
 ## PTID                           PTID -0.4989370               1 0.4989370
-## .recpos                     .recpos -0.4989370               0 0.4989370
+## .pos                           .pos -0.4989370               0 0.4989370
 ## BODY.WEIGHT             BODY.WEIGHT  0.3483585               1 0.3483585
 ## .rnorm                       .rnorm  0.0695725               0 0.0695725
 ```
@@ -1297,19 +1298,19 @@ glb_chunks_df <- myadd_chunk(NULL, "import.data")
 ## HospCost.cut.fctr HospCost.cut.fctr  0.8585462               1 0.8585462
 ## BODY.WEIGHT             BODY.WEIGHT  0.3483585               1 0.3483585
 ## .rnorm                       .rnorm  0.0695725               0 0.0695725
-## .recpos                     .recpos -0.4989370               0 0.4989370
+## .pos                           .pos -0.4989370               0 0.4989370
 ## PTID                           PTID -0.4989370               1 0.4989370
 ##                   cor.high.X freqRatio percentUnique zeroVar   nzv
 ## HospCost.cut.fctr         NA  3.431818      1.612903   FALSE FALSE
 ## BODY.WEIGHT               NA  1.444444     29.435484   FALSE FALSE
 ## .rnorm                    NA  1.000000    100.000000   FALSE FALSE
-## .recpos                   NA  1.000000    100.000000   FALSE FALSE
+## .pos                      NA  1.000000    100.000000   FALSE FALSE
 ## PTID                      NA  1.000000    100.000000   FALSE FALSE
 ##                   is.cor.y.abs.low
 ## HospCost.cut.fctr            FALSE
 ## BODY.WEIGHT                  FALSE
 ## .rnorm                       FALSE
-## .recpos                      FALSE
+## .pos                         FALSE
 ## PTID                         FALSE
 ```
 
@@ -1401,8 +1402,8 @@ glb_chunks_df <- myadd_chunk(NULL, "import.data")
 
 ```
 ##              label step_major step_minor label_minor    bgn    end elapsed
-## 9  select.features          5          0           0 21.000 22.417   1.417
-## 10      fit.models          6          0           0 22.417     NA      NA
+## 9  select.features          5          0           0 21.378 22.774   1.396
+## 10      fit.models          6          0           0 22.774     NA      NA
 ```
 
 ## Step `6.0: fit models`
@@ -1413,7 +1414,7 @@ fit.models_0_chunk_df <- myadd_chunk(NULL, "fit.models_0_bgn", label.minor = "se
 
 ```
 ##              label step_major step_minor label_minor    bgn end elapsed
-## 1 fit.models_0_bgn          1          0       setup 22.883  NA      NA
+## 1 fit.models_0_bgn          1          0       setup 23.238  NA      NA
 ```
 
 ```r
@@ -1469,6 +1470,8 @@ get_dsp_models_df <- function() {
     }
     dev.off()
 
+    if (all(row.names(dsp_models_df) != dsp_models_df$id))
+        row.names(dsp_models_df) <- dsp_models_df$id
     return(dsp_models_df)
 }
 #get_dsp_models_df()
@@ -1531,10 +1534,10 @@ fit.models_0_chunk_df <- myadd_chunk(fit.models_0_chunk_df,
 
 ```
 ##              label step_major step_minor   label_minor    bgn    end
-## 1 fit.models_0_bgn          1          0         setup 22.883 22.913
-## 2 fit.models_0_MFO          1          1 myMFO_classfr 22.913     NA
+## 1 fit.models_0_bgn          1          0         setup 23.238 23.267
+## 2 fit.models_0_MFO          1          1 myMFO_classfr 23.268     NA
 ##   elapsed
-## 1    0.03
+## 1   0.029
 ## 2      NA
 ```
 
@@ -1575,7 +1578,7 @@ ret_lst <- myfit_mdl(mdl_specs_lst = myinit_mdl_specs_lst(mdl_specs_lst = list(
 ## F-statistic: 1.197 on 1 and 246 DF,  p-value: 0.2751
 ## 
 ##         id  feats max.nTuningRuns min.elapsedtime.everything
-## 1 MFO###lm .rnorm               0                      0.499
+## 1 MFO###lm .rnorm               0                      0.506
 ##   min.elapsedtime.final max.R.sq.fit min.RMSE.fit max.Adj.R.sq.fit
 ## 1                 0.003  0.004840332     122043.6     0.0007949678
 ##   max.R.sq.OOB min.RMSE.OOB max.Adj.R.sq.OOB
@@ -1611,8 +1614,8 @@ fit.models_0_chunk_df <- myadd_chunk(fit.models_0_chunk_df,
 ## 2               fit.models_0_MFO          1          1 myMFO_classfr
 ## 3 fit.models_0_Max.cor.Y.rcv.*X*          1          2        glmnet
 ##      bgn    end elapsed
-## 2 22.913 24.964   2.051
-## 3 24.965     NA      NA
+## 2 23.268 25.323   2.056
+## 3 25.324     NA      NA
 ```
 
 ```r
@@ -1625,7 +1628,7 @@ ret_lst <- myfit_mdl(mdl_specs_lst=myinit_mdl_specs_lst(mdl_specs_lst=list(
 
 ```
 ## [1] "fitting model: Max.cor.Y.rcv.1X1###glmnet"
-## [1] "    indep_vars: .recpos,.rnorm"
+## [1] "    indep_vars: .pos,.rnorm"
 ```
 
 ```
@@ -1660,15 +1663,15 @@ ret_lst <- myfit_mdl(mdl_specs_lst=myinit_mdl_specs_lst(mdl_specs_lst=list(
 ## tuneValue     2    data.frame list     
 ## obsLevels     1    -none-     logical  
 ## [1] "min lambda > lambdaOpt:"
-## (Intercept)     .recpos      .rnorm 
+## (Intercept)        .pos      .rnorm 
 ## 302901.9411   -419.3261   3786.8015 
 ## [1] "max lambda < lambdaOpt:"
-## (Intercept)     .recpos      .rnorm 
+## (Intercept)        .pos      .rnorm 
 ## 303009.7705   -419.7589   3796.9176 
-##                           id          feats max.nTuningRuns
-## 1 Max.cor.Y.rcv.1X1###glmnet .recpos,.rnorm               0
+##                           id       feats max.nTuningRuns
+## 1 Max.cor.Y.rcv.1X1###glmnet .pos,.rnorm               0
 ##   min.elapsedtime.everything min.elapsedtime.final max.R.sq.fit
-## 1                       0.66                 0.009    0.2499389
+## 1                      0.647                 0.009    0.2499389
 ##   min.RMSE.fit max.Adj.R.sq.fit max.R.sq.OOB min.RMSE.OOB max.Adj.R.sq.OOB
 ## 1     105953.9        0.2438159    0.2472484     106143.8        0.2411034
 ```
@@ -1743,7 +1746,7 @@ ret_lst <- myfit_mdl(mdl_specs_lst = myinit_mdl_specs_lst(mdl_specs_lst = list(
 
 ```
 ## [1] "fitting model: Max.cor.Y##rcv#rpart"
-## [1] "    indep_vars: .recpos,.rnorm"
+## [1] "    indep_vars: .pos,.rnorm"
 ```
 
 ```
@@ -1788,22 +1791,22 @@ ret_lst <- myfit_mdl(mdl_specs_lst = myinit_mdl_specs_lst(mdl_specs_lst = list(
 ## 5 0.004734736      8 0.2617856
 ## 
 ## Variable importance
-## .recpos  .rnorm 
-##      97       3 
+##   .pos .rnorm 
+##     97      3 
 ## 
 ## Node number 1: 248 observations,    complexity param=0.5794154
 ##   mean=198723.3, MSE=1.49671e+10 
 ##   left son=2 (211 obs) right son=3 (37 obs)
 ##   Primary splits:
-##       .recpos < 74         to the right, improve=0.57941540, (0 missing)
-##       .rnorm  < 0.7884976  to the left,  improve=0.01302827, (0 missing)
+##       .pos   < 74         to the right, improve=0.57941540, (0 missing)
+##       .rnorm < 0.7884976  to the left,  improve=0.01302827, (0 missing)
 ## 
 ## Node number 2: 211 observations,    complexity param=0.01367525
 ##   mean=159727, MSE=3.111513e+09 
 ##   left son=4 (119 obs) right son=5 (92 obs)
 ##   Primary splits:
-##       .recpos < 258        to the right, improve=0.03594479, (0 missing)
-##       .rnorm  < -1.313302  to the right, improve=0.01915310, (0 missing)
+##       .pos   < 258        to the right, improve=0.03594479, (0 missing)
+##       .rnorm < -1.313302  to the right, improve=0.01915310, (0 missing)
 ##   Surrogate splits:
 ##       .rnorm < -1.782149  to the right, agree=0.573, adj=0.022, (0 split)
 ## 
@@ -1811,8 +1814,8 @@ ret_lst <- myfit_mdl(mdl_specs_lst = myinit_mdl_specs_lst(mdl_specs_lst = list(
 ##   mean=421107.7, MSE=2.444902e+10 
 ##   left son=6 (22 obs) right son=7 (15 obs)
 ##   Primary splits:
-##       .recpos < 30         to the right, improve=0.3680899, (0 missing)
-##       .rnorm  < -0.4694453 to the right, improve=0.1952369, (0 missing)
+##       .pos   < 30         to the right, improve=0.3680899, (0 missing)
+##       .rnorm < -0.4694453 to the right, improve=0.1952369, (0 missing)
 ##   Surrogate splits:
 ##       .rnorm < -0.4215637 to the right, agree=0.676, adj=0.2, (0 split)
 ## 
@@ -1820,8 +1823,8 @@ ret_lst <- myfit_mdl(mdl_specs_lst = myinit_mdl_specs_lst(mdl_specs_lst = list(
 ##   mean=150428.3, MSE=2.98195e+09 
 ##   left son=8 (31 obs) right son=9 (88 obs)
 ##   Primary splits:
-##       .recpos < 320        to the left,  improve=0.15807890, (0 missing)
-##       .rnorm  < 0.3272134  to the left,  improve=0.04004187, (0 missing)
+##       .pos   < 320        to the left,  improve=0.15807890, (0 missing)
+##       .rnorm < 0.3272134  to the left,  improve=0.04004187, (0 missing)
 ##   Surrogate splits:
 ##       .rnorm < 2.159129   to the right, agree=0.756, adj=0.065, (0 split)
 ## 
@@ -1829,8 +1832,8 @@ ret_lst <- myfit_mdl(mdl_specs_lst = myinit_mdl_specs_lst(mdl_specs_lst = list(
 ##   mean=171754.7, MSE=3.022592e+09 
 ##   left son=10 (44 obs) right son=11 (48 obs)
 ##   Primary splits:
-##       .recpos < 162        to the left,  improve=0.2610327, (0 missing)
-##       .rnorm  < -1.313302  to the right, improve=0.0710934, (0 missing)
+##       .pos   < 162        to the left,  improve=0.2610327, (0 missing)
+##       .rnorm < -1.313302  to the right, improve=0.0710934, (0 missing)
 ##   Surrogate splits:
 ##       .rnorm < 0.3218771  to the right, agree=0.576, adj=0.114, (0 split)
 ## 
@@ -1847,8 +1850,8 @@ ret_lst <- myfit_mdl(mdl_specs_lst = myinit_mdl_specs_lst(mdl_specs_lst = list(
 ##   mean=163314.5, MSE=3.042563e+09 
 ##   left son=18 (77 obs) right son=19 (11 obs)
 ##   Primary splits:
-##       .recpos < 342        to the right, improve=0.07310233, (0 missing)
-##       .rnorm  < 0.1211105  to the left,  improve=0.05521225, (0 missing)
+##       .pos   < 342        to the right, improve=0.07310233, (0 missing)
+##       .rnorm < 0.1211105  to the left,  improve=0.05521225, (0 missing)
 ##   Surrogate splits:
 ##       .rnorm < -1.824138  to the right, agree=0.886, adj=0.091, (0 split)
 ## 
@@ -1859,15 +1862,15 @@ ret_lst <- myfit_mdl(mdl_specs_lst = myinit_mdl_specs_lst(mdl_specs_lst = list(
 ##   mean=198648, MSE=3.506967e+09 
 ##   left son=22 (41 obs) right son=23 (7 obs)
 ##   Primary splits:
-##       .recpos < 176        to the right, improve=0.38457980, (0 missing)
-##       .rnorm  < -1.274009  to the right, improve=0.03859772, (0 missing)
+##       .pos   < 176        to the right, improve=0.38457980, (0 missing)
+##       .rnorm < -1.274009  to the right, improve=0.03859772, (0 missing)
 ## 
 ## Node number 18: 77 observations,    complexity param=0.005312514
 ##   mean=157677.7, MSE=2.722734e+09 
 ##   left son=36 (70 obs) right son=37 (7 obs)
 ##   Primary splits:
-##       .recpos < 482        to the left,  improve=0.09475570, (0 missing)
-##       .rnorm  < 0.1211105  to the left,  improve=0.06485467, (0 missing)
+##       .pos   < 482        to the left,  improve=0.09475570, (0 missing)
+##       .rnorm < 0.1211105  to the left,  improve=0.06485467, (0 missing)
 ## 
 ## Node number 19: 11 observations
 ##   mean=202772.5, MSE=3.502013e+09 
@@ -1890,26 +1893,26 @@ ret_lst <- myfit_mdl(mdl_specs_lst = myinit_mdl_specs_lst(mdl_specs_lst = list(
 ##       * denotes terminal node
 ## 
 ##  1) root 248 3.711840e+12 198723.3  
-##    2) .recpos>=74 211 6.565292e+11 159727.0  
-##      4) .recpos>=258 119 3.548520e+11 150428.3  
-##        8) .recpos< 320 31 3.101187e+10 113848.0 *
-##        9) .recpos>=320 88 2.677455e+11 163314.5  
-##         18) .recpos>=342 77 2.096505e+11 157677.7  
-##           36) .recpos< 482 70 1.605692e+11 152598.4 *
-##           37) .recpos>=482 7 2.921580e+10 208470.9 *
-##         19) .recpos< 342 11 3.852214e+10 202772.5 *
-##      5) .recpos< 258 92 2.780784e+11 171754.7  
-##       10) .recpos< 162 44 3.715644e+10 142416.7 *
-##       11) .recpos>=162 48 1.683344e+11 198648.0  
-##         22) .recpos>=176 41 8.919411e+10 183473.4 *
-##         23) .recpos< 176 7 1.440230e+10 287527.6 *
-##    3) .recpos< 74 37 9.046136e+11 421107.7  
-##      6) .recpos>=30 22 1.770885e+11 342775.2 *
-##      7) .recpos< 30 15 3.945460e+11 535995.3 *
-##                     id          feats max.nTuningRuns
-## 1 Max.cor.Y##rcv#rpart .recpos,.rnorm               5
+##    2) .pos>=74 211 6.565292e+11 159727.0  
+##      4) .pos>=258 119 3.548520e+11 150428.3  
+##        8) .pos< 320 31 3.101187e+10 113848.0 *
+##        9) .pos>=320 88 2.677455e+11 163314.5  
+##         18) .pos>=342 77 2.096505e+11 157677.7  
+##           36) .pos< 482 70 1.605692e+11 152598.4 *
+##           37) .pos>=482 7 2.921580e+10 208470.9 *
+##         19) .pos< 342 11 3.852214e+10 202772.5 *
+##      5) .pos< 258 92 2.780784e+11 171754.7  
+##       10) .pos< 162 44 3.715644e+10 142416.7 *
+##       11) .pos>=162 48 1.683344e+11 198648.0  
+##         22) .pos>=176 41 8.919411e+10 183473.4 *
+##         23) .pos< 176 7 1.440230e+10 287527.6 *
+##    3) .pos< 74 37 9.046136e+11 421107.7  
+##      6) .pos>=30 22 1.770885e+11 342775.2 *
+##      7) .pos< 30 15 3.945460e+11 535995.3 *
+##                     id       feats max.nTuningRuns
+## 1 Max.cor.Y##rcv#rpart .pos,.rnorm               5
 ##   min.elapsedtime.everything min.elapsedtime.final max.R.sq.fit
-## 1                      1.345                 0.012    0.7382144
+## 1                        1.3                  0.01    0.7382144
 ##   min.RMSE.fit max.Adj.R.sq.fit max.R.sq.OOB min.RMSE.OOB max.Adj.R.sq.OOB
 ## 1      73485.1               NA    0.7027562     66699.91               NA
 ##   max.Rsquared.fit min.RMSESD.fit max.RsquaredSD.fit
@@ -1998,10 +2001,10 @@ fit.models_0_chunk_df <- myadd_chunk(fit.models_0_chunk_df,
 
 ```
 ##                            label step_major step_minor label_minor    bgn
-## 3 fit.models_0_Max.cor.Y.rcv.*X*          1          2      glmnet 24.965
-## 4         fit.models_0_Low.cor.X          1          3      glmnet 29.536
+## 3 fit.models_0_Max.cor.Y.rcv.*X*          1          2      glmnet 25.324
+## 4         fit.models_0_Low.cor.X          1          3      glmnet 29.808
 ##      end elapsed
-## 3 29.535    4.57
+## 3 29.808   4.484
 ## 4     NA      NA
 ```
 
@@ -2026,7 +2029,7 @@ ret_lst <- myfit_mdl(mdl_specs_lst=myinit_mdl_specs_lst(mdl_specs_lst=list(
 
 ```
 ## [1] "fitting model: Low.cor.X##rcv#glmnet"
-## [1] "    indep_vars: .rnorm,.recpos"
+## [1] "    indep_vars: .rnorm,.pos"
 ## Aggregating results
 ## Selecting tuning parameters
 ## Fitting alpha = 1, lambda = 5666 on full training set
@@ -2060,15 +2063,15 @@ ret_lst <- myfit_mdl(mdl_specs_lst=myinit_mdl_specs_lst(mdl_specs_lst=list(
 ## tuneValue     2    data.frame list     
 ## obsLevels     1    -none-     logical  
 ## [1] "min lambda > lambdaOpt:"
-## (Intercept)     .recpos 
+## (Intercept)        .pos 
 ## 294119.1024   -384.6604 
 ## [1] "max lambda < lambdaOpt:"
-## (Intercept)     .recpos 
+## (Intercept)        .pos 
 ## 295036.7432   -388.3605 
-##                      id          feats max.nTuningRuns
-## 1 Low.cor.X##rcv#glmnet .rnorm,.recpos              25
+##                      id       feats max.nTuningRuns
+## 1 Low.cor.X##rcv#glmnet .rnorm,.pos              25
 ##   min.elapsedtime.everything min.elapsedtime.final max.R.sq.fit
-## 1                      2.483                 0.006    0.2467928
+## 1                      2.422                 0.006    0.2467928
 ##   min.RMSE.fit max.Adj.R.sq.fit max.R.sq.OOB min.RMSE.OOB max.Adj.R.sq.OOB
 ## 1     106228.6        0.2406442    0.2467828     106176.6        0.2406341
 ##   max.Rsquared.fit min.RMSESD.fit max.RsquaredSD.fit
@@ -2083,10 +2086,10 @@ fit.models_0_chunk_df <-
 
 ```
 ##                    label step_major step_minor label_minor    bgn    end
-## 4 fit.models_0_Low.cor.X          1          3      glmnet 29.536 33.494
-## 5       fit.models_0_end          1          4    teardown 33.495     NA
+## 4 fit.models_0_Low.cor.X          1          3      glmnet 29.808 33.663
+## 5       fit.models_0_end          1          4    teardown 33.664     NA
 ##   elapsed
-## 4   3.958
+## 4   3.855
 ## 5      NA
 ```
 
@@ -2098,8 +2101,8 @@ glb_chunks_df <- myadd_chunk(glb_chunks_df, "fit.models", major.inc = FALSE)
 
 ```
 ##         label step_major step_minor label_minor    bgn    end elapsed
-## 10 fit.models          6          0           0 22.417 33.504  11.087
-## 11 fit.models          6          1           1 33.505     NA      NA
+## 10 fit.models          6          0           0 22.774 33.672  10.898
+## 11 fit.models          6          1           1 33.673     NA      NA
 ```
 
 
@@ -2109,7 +2112,7 @@ fit.models_1_chunk_df <- myadd_chunk(NULL, "fit.models_1_bgn", label.minor="setu
 
 ```
 ##              label step_major step_minor label_minor    bgn end elapsed
-## 1 fit.models_1_bgn          1          0       setup 34.644  NA      NA
+## 1 fit.models_1_bgn          1          0       setup 34.752  NA      NA
 ```
 
 ```r
@@ -2256,19 +2259,19 @@ for (mdl_id_pfx in names(glbMdlFamilies)) {
 
 ```
 ##                label step_major step_minor label_minor    bgn    end
-## 1   fit.models_1_bgn          1          0       setup 34.644 34.655
-## 2 fit.models_1_All.X          1          1       setup 34.656     NA
+## 1   fit.models_1_bgn          1          0       setup 34.752 34.762
+## 2 fit.models_1_All.X          1          1       setup 34.762     NA
 ##   elapsed
-## 1   0.011
+## 1    0.01
 ## 2      NA
 ##                label step_major step_minor label_minor    bgn    end
-## 2 fit.models_1_All.X          1          1       setup 34.656 34.662
-## 3 fit.models_1_All.X          1          2      glmnet 34.663     NA
+## 2 fit.models_1_All.X          1          1       setup 34.762 34.769
+## 3 fit.models_1_All.X          1          2      glmnet 34.769     NA
 ##   elapsed
-## 2   0.006
+## 2   0.007
 ## 3      NA
 ## [1] "fitting model: All.X##rcv#glmnet"
-## [1] "    indep_vars: .rnorm,.recpos"
+## [1] "    indep_vars: .rnorm,.pos"
 ## Aggregating results
 ## Selecting tuning parameters
 ## Fitting alpha = 1, lambda = 5666 on full training set
@@ -2302,19 +2305,19 @@ for (mdl_id_pfx in names(glbMdlFamilies)) {
 ## tuneValue     2    data.frame list     
 ## obsLevels     1    -none-     logical  
 ## [1] "min lambda > lambdaOpt:"
-## (Intercept)     .recpos 
+## (Intercept)        .pos 
 ## 294119.1024   -384.6604 
 ## [1] "max lambda < lambdaOpt:"
-## (Intercept)     .recpos 
+## (Intercept)        .pos 
 ## 295036.7432   -388.3605 
-##                  id          feats max.nTuningRuns
-## 1 All.X##rcv#glmnet .rnorm,.recpos              25
-##   min.elapsedtime.everything min.elapsedtime.final max.R.sq.fit
-## 1                      1.606                 0.005    0.2467928
-##   min.RMSE.fit max.Adj.R.sq.fit max.R.sq.OOB min.RMSE.OOB max.Adj.R.sq.OOB
-## 1     106228.6        0.2406442    0.2467828     106176.6        0.2406341
-##   max.Rsquared.fit min.RMSESD.fit max.RsquaredSD.fit
-## 1        0.2517975       11831.04         0.02755772
+##                  id       feats max.nTuningRuns min.elapsedtime.everything
+## 1 All.X##rcv#glmnet .rnorm,.pos              25                      1.579
+##   min.elapsedtime.final max.R.sq.fit min.RMSE.fit max.Adj.R.sq.fit
+## 1                 0.006    0.2467928     106228.6        0.2406442
+##   max.R.sq.OOB min.RMSE.OOB max.Adj.R.sq.OOB max.Rsquared.fit
+## 1    0.2467828     106176.6        0.2406341        0.2517975
+##   min.RMSESD.fit max.RsquaredSD.fit
+## 1       11831.04         0.02755772
 ```
 
 ```r
@@ -2326,10 +2329,10 @@ fit.models_1_chunk_df <-
 
 ```
 ##                  label step_major step_minor label_minor    bgn    end
-## 3   fit.models_1_All.X          1          2      glmnet 34.663 37.712
-## 4 fit.models_1_preProc          1          3     preProc 37.713     NA
+## 3   fit.models_1_All.X          1          2      glmnet 34.769 37.764
+## 4 fit.models_1_preProc          1          3     preProc 37.765     NA
 ##   elapsed
-## 3    3.05
+## 3   2.996
 ## 4      NA
 ```
 
@@ -2487,24 +2490,24 @@ print(glb_models_df)
 ```
 
 ```
-##                                                    id          feats
-## MFO###lm                                     MFO###lm         .rnorm
-## Max.cor.Y.rcv.1X1###glmnet Max.cor.Y.rcv.1X1###glmnet .recpos,.rnorm
-## Max.cor.Y##rcv#rpart             Max.cor.Y##rcv#rpart .recpos,.rnorm
-## Low.cor.X##rcv#glmnet           Low.cor.X##rcv#glmnet .rnorm,.recpos
-## All.X##rcv#glmnet                   All.X##rcv#glmnet .rnorm,.recpos
+##                                                    id       feats
+## MFO###lm                                     MFO###lm      .rnorm
+## Max.cor.Y.rcv.1X1###glmnet Max.cor.Y.rcv.1X1###glmnet .pos,.rnorm
+## Max.cor.Y##rcv#rpart             Max.cor.Y##rcv#rpart .pos,.rnorm
+## Low.cor.X##rcv#glmnet           Low.cor.X##rcv#glmnet .rnorm,.pos
+## All.X##rcv#glmnet                   All.X##rcv#glmnet .rnorm,.pos
 ##                            max.nTuningRuns min.elapsedtime.everything
-## MFO###lm                                 0                      0.499
-## Max.cor.Y.rcv.1X1###glmnet               0                      0.660
-## Max.cor.Y##rcv#rpart                     5                      1.345
-## Low.cor.X##rcv#glmnet                   25                      2.483
-## All.X##rcv#glmnet                       25                      1.606
+## MFO###lm                                 0                      0.506
+## Max.cor.Y.rcv.1X1###glmnet               0                      0.647
+## Max.cor.Y##rcv#rpart                     5                      1.300
+## Low.cor.X##rcv#glmnet                   25                      2.422
+## All.X##rcv#glmnet                       25                      1.579
 ##                            min.elapsedtime.final max.R.sq.fit min.RMSE.fit
 ## MFO###lm                                   0.003  0.004840332     122043.6
 ## Max.cor.Y.rcv.1X1###glmnet                 0.009  0.249938851     105953.9
-## Max.cor.Y##rcv#rpart                       0.012  0.738214419      73485.1
+## Max.cor.Y##rcv#rpart                       0.010  0.738214419      73485.1
 ## Low.cor.X##rcv#glmnet                      0.006  0.246792824     106228.6
-## All.X##rcv#glmnet                          0.005  0.246792824     106228.6
+## All.X##rcv#glmnet                          0.006  0.246792824     106228.6
 ##                            max.Adj.R.sq.fit max.R.sq.OOB min.RMSE.OOB
 ## MFO###lm                       0.0007949678 -0.007501072    122798.07
 ## Max.cor.Y.rcv.1X1###glmnet     0.2438159028  0.247248356    106143.81
@@ -2534,10 +2537,10 @@ fit.models_1_chunk_df <-
 
 ```
 ##                  label step_major step_minor label_minor    bgn    end
-## 4 fit.models_1_preProc          1          3     preProc 37.713 37.765
-## 5     fit.models_1_end          1          4    teardown 37.766     NA
+## 4 fit.models_1_preProc          1          3     preProc 37.765 37.811
+## 5     fit.models_1_end          1          4    teardown 37.812     NA
 ##   elapsed
-## 4   0.052
+## 4   0.046
 ## 5      NA
 ```
 
@@ -2547,8 +2550,8 @@ glb_chunks_df <- myadd_chunk(glb_chunks_df, "fit.models", major.inc = FALSE)
 
 ```
 ##         label step_major step_minor label_minor    bgn    end elapsed
-## 11 fit.models          6          1           1 33.505 37.774   4.269
-## 12 fit.models          6          2           2 37.775     NA      NA
+## 11 fit.models          6          1           1 33.673 37.819   4.146
+## 12 fit.models          6          2           2 37.819     NA      NA
 ```
 
 
@@ -2559,7 +2562,7 @@ fit.models_2_chunk_df <-
 
 ```
 ##              label step_major step_minor label_minor    bgn end elapsed
-## 1 fit.models_2_bgn          1          0       setup 38.466  NA      NA
+## 1 fit.models_2_bgn          1          0       setup 38.514  NA      NA
 ```
 
 ```r
@@ -2574,12 +2577,12 @@ print(plt_models_df)
 ```
 
 ```
-##                                                    id          feats
-## MFO###lm                                     MFO###lm         .rnorm
-## Max.cor.Y.rcv.1X1###glmnet Max.cor.Y.rcv.1X1###glmnet .recpos,.rnorm
-## Max.cor.Y##rcv#rpart             Max.cor.Y##rcv#rpart .recpos,.rnorm
-## Low.cor.X##rcv#glmnet           Low.cor.X##rcv#glmnet .rnorm,.recpos
-## All.X##rcv#glmnet                   All.X##rcv#glmnet .rnorm,.recpos
+##                                                    id       feats
+## MFO###lm                                     MFO###lm      .rnorm
+## Max.cor.Y.rcv.1X1###glmnet Max.cor.Y.rcv.1X1###glmnet .pos,.rnorm
+## Max.cor.Y##rcv#rpart             Max.cor.Y##rcv#rpart .pos,.rnorm
+## Low.cor.X##rcv#glmnet           Low.cor.X##rcv#glmnet .rnorm,.pos
+## All.X##rcv#glmnet                   All.X##rcv#glmnet .rnorm,.pos
 ##                            max.nTuningRuns max.R.sq.fit max.Adj.R.sq.fit
 ## MFO###lm                                 0  0.004840332     0.0007949678
 ## Max.cor.Y.rcv.1X1###glmnet               0  0.249938851     0.2438159028
@@ -2593,17 +2596,17 @@ print(plt_models_df)
 ## Low.cor.X##rcv#glmnet       0.246782831        0.2406341        0.2517975
 ## All.X##rcv#glmnet           0.246782831        0.2406341        0.2517975
 ##                            inv.elapsedtime.everything
-## MFO###lm                                    2.0040080
-## Max.cor.Y.rcv.1X1###glmnet                  1.5151515
-## Max.cor.Y##rcv#rpart                        0.7434944
-## Low.cor.X##rcv#glmnet                       0.4027386
-## All.X##rcv#glmnet                           0.6226650
+## MFO###lm                                    1.9762846
+## Max.cor.Y.rcv.1X1###glmnet                  1.5455951
+## Max.cor.Y##rcv#rpart                        0.7692308
+## Low.cor.X##rcv#glmnet                       0.4128819
+## All.X##rcv#glmnet                           0.6333122
 ##                            inv.elapsedtime.final inv.RMSE.fit inv.RMSE.OOB
-## MFO###lm                               333.33333 8.193790e-06 8.143450e-06
-## Max.cor.Y.rcv.1X1###glmnet             111.11111 9.438063e-06 9.421181e-06
-## Max.cor.Y##rcv#rpart                    83.33333 1.360820e-05 1.499252e-05
-## Low.cor.X##rcv#glmnet                  166.66667 9.413657e-06 9.418269e-06
-## All.X##rcv#glmnet                      200.00000 9.413657e-06 9.418269e-06
+## MFO###lm                                333.3333 8.193790e-06 8.143450e-06
+## Max.cor.Y.rcv.1X1###glmnet              111.1111 9.438063e-06 9.421181e-06
+## Max.cor.Y##rcv#rpart                    100.0000 1.360820e-05 1.499252e-05
+## Low.cor.X##rcv#glmnet                   166.6667 9.413657e-06 9.418269e-06
+## All.X##rcv#glmnet                       166.6667 9.413657e-06 9.418269e-06
 ```
 
 ```r
@@ -2820,7 +2823,7 @@ print("Metrics used for model selection:"); print(get_model_sel_frmla())
 
 ```
 ## ~+min.RMSE.OOB - max.R.sq.OOB - max.Adj.R.sq.fit + min.RMSE.fit
-## <environment: 0x7fa59f3a7548>
+## <environment: 0x7fb35ce21dc8>
 ```
 
 ```r
@@ -3110,10 +3113,10 @@ myprint_mdl(glb_sel_mdl <- glb_models_lst[[glb_sel_mdl_id]])
 ## tuneValue     2    data.frame list     
 ## obsLevels     1    -none-     logical  
 ## [1] "min lambda > lambdaOpt:"
-## (Intercept)     .recpos 
+## (Intercept)        .pos 
 ## 294119.1024   -384.6604 
 ## [1] "max lambda < lambdaOpt:"
-## (Intercept)     .recpos 
+## (Intercept)        .pos 
 ## 295036.7432   -388.3605
 ```
 
@@ -3156,9 +3159,9 @@ print(glb_featsimp_df)
 ```
 
 ```
-##         imp All.X##rcv#glmnet.imp
-## .rnorm  100                   100
-## .recpos   0                     0
+##        imp All.X##rcv#glmnet.imp
+## .rnorm 100                   100
+## .pos     0                     0
 ```
 
 ```r
@@ -3238,24 +3241,18 @@ if (glb_is_classification && glb_is_binomial)
 ![](DADHosp_SLR_base_files/figure-html/fit.models_2-5.png) ![](DADHosp_SLR_base_files/figure-html/fit.models_2-6.png) 
 
 ```
-##    PTID BODY.WEIGHT HOSPITAL.COST .src     .rnorm .recpos
-## 14    7          60        887350 Test -1.2300370      14
-## 4     2          41        809130 Test  0.9272271       4
-## 26   13          71        711616 Test -0.8164872      26
-## 2     1          49        660293 Test  1.4350423       2
-## 8     4          80        629990 Test  0.3679137       8
-##    HospCost.cut.fctr HOSPITAL.COST.All.X..rcv.glmnet
-## 14     (3e+05,9e+05]                        289219.6
-## 4      (3e+05,9e+05]                        293087.0
-## 26     (3e+05,9e+05]                        284578.8
-## 2      (3e+05,9e+05]                        293860.4
-## 8      (3e+05,9e+05]                        291540.0
-##    HOSPITAL.COST.All.X..rcv.glmnet.err
-## 14                            598130.4
-## 4                             516043.0
-## 26                            427037.2
-## 2                             366432.6
-## 8                             338450.0
+##    PTID BODY.WEIGHT HOSPITAL.COST .src     .rnorm .pos HospCost.cut.fctr
+## 14    7          60        887350 Test -1.2300370   14     (3e+05,9e+05]
+## 4     2          41        809130 Test  0.9272271    4     (3e+05,9e+05]
+## 26   13          71        711616 Test -0.8164872   26     (3e+05,9e+05]
+## 2     1          49        660293 Test  1.4350423    2     (3e+05,9e+05]
+## 8     4          80        629990 Test  0.3679137    8     (3e+05,9e+05]
+##    HOSPITAL.COST.All.X..rcv.glmnet HOSPITAL.COST.All.X..rcv.glmnet.err
+## 14                        289219.6                            598130.4
+## 4                         293087.0                            516043.0
+## 26                        284578.8                            427037.2
+## 2                         293860.4                            366432.6
+## 8                         291540.0                            338450.0
 ##    HOSPITAL.COST.All.X..rcv.glmnet.err.abs
 ## 14                                598130.4
 ## 4                                 516043.0
@@ -3328,7 +3325,7 @@ fit.models_2_chunk_df <-
 
 ```
 ##              label step_major step_minor label_minor    bgn end elapsed
-## 1 fit.models_2_bgn          1          0    teardown 44.167  NA      NA
+## 1 fit.models_2_bgn          1          0    teardown 44.003  NA      NA
 ```
 
 ```r
@@ -3337,8 +3334,8 @@ glb_chunks_df <- myadd_chunk(glb_chunks_df, "fit.models", major.inc=FALSE)
 
 ```
 ##         label step_major step_minor label_minor    bgn    end elapsed
-## 12 fit.models          6          2           2 37.775 44.177   6.402
-## 13 fit.models          6          3           3 44.178     NA      NA
+## 12 fit.models          6          2           2 37.819 44.012   6.193
+## 13 fit.models          6          3           3 44.013     NA      NA
 ```
 
 
@@ -3408,10 +3405,10 @@ glb_chunks_df <- myadd_chunk(glb_chunks_df, "fit.data.training", major.inc=TRUE)
 
 ```
 ##                label step_major step_minor label_minor    bgn    end
-## 13        fit.models          6          3           3 44.178 47.413
-## 14 fit.data.training          7          0           0 47.414     NA
+## 13        fit.models          6          3           3 44.013 47.138
+## 14 fit.data.training          7          0           0 47.139     NA
 ##    elapsed
-## 13   3.236
+## 13   3.125
 ## 14      NA
 ```
 
@@ -3577,10 +3574,10 @@ glb_chunks_df <- myadd_chunk(glb_chunks_df, "fit.data.training", major.inc=FALSE
 
 ```
 ##                label step_major step_minor label_minor    bgn    end
-## 14 fit.data.training          7          0           0 47.414 47.842
-## 15 fit.data.training          7          1           1 47.843     NA
+## 14 fit.data.training          7          0           0 47.139 47.557
+## 15 fit.data.training          7          1           1 47.558     NA
 ##    elapsed
-## 14   0.429
+## 14   0.418
 ## 15      NA
 ```
 
@@ -3621,9 +3618,9 @@ print(glb_featsimp_df)
 ```
 
 ```
-##         All.X##rcv#glmnet.imp imp Final.All.X##rcv#glmnet.imp
-## .rnorm                    100 100                         100
-## .recpos                     0   0                           0
+##        All.X##rcv#glmnet.imp imp Final.All.X##rcv#glmnet.imp
+## .rnorm                   100 100                         100
+## .pos                       0   0                           0
 ```
 
 ```r
@@ -3637,18 +3634,18 @@ if (glb_is_classification && glb_is_binomial)
 ![](DADHosp_SLR_base_files/figure-html/fit.data.training_1-1.png) ![](DADHosp_SLR_base_files/figure-html/fit.data.training_1-2.png) 
 
 ```
-##    PTID BODY.WEIGHT HOSPITAL.COST  .src     .rnorm .recpos
-## 13    7          60        887350 Train -0.4824486      13
-## 3     2          41        809130 Train  2.5252625       3
-## 25   13          71        711616 Train -0.6778318      25
-## 1     1          49        660293 Train -0.4801124       1
-## 7     4          80        629990 Train -1.0953663       7
-##    HospCost.cut.fctr .lcn HOSPITAL.COST.All.X..rcv.glmnet
-## 13     (3e+05,9e+05]  OOB                              NA
-## 3      (3e+05,9e+05]  OOB                              NA
-## 25     (3e+05,9e+05]  OOB                              NA
-## 1      (3e+05,9e+05]  OOB                              NA
-## 7      (3e+05,9e+05]  OOB                              NA
+##    PTID BODY.WEIGHT HOSPITAL.COST  .src     .rnorm .pos HospCost.cut.fctr
+## 13    7          60        887350 Train -0.4824486   13     (3e+05,9e+05]
+## 3     2          41        809130 Train  2.5252625    3     (3e+05,9e+05]
+## 25   13          71        711616 Train -0.6778318   25     (3e+05,9e+05]
+## 1     1          49        660293 Train -0.4801124    1     (3e+05,9e+05]
+## 7     4          80        629990 Train -1.0953663    7     (3e+05,9e+05]
+##    .lcn HOSPITAL.COST.All.X..rcv.glmnet
+## 13  OOB                              NA
+## 3   OOB                              NA
+## 25  OOB                              NA
+## 1   OOB                              NA
+## 7   OOB                              NA
 ##    HOSPITAL.COST.All.X..rcv.glmnet.err
 ## 13                                  NA
 ## 3                                   NA
@@ -3782,10 +3779,10 @@ glb_chunks_df <- myadd_chunk(glb_chunks_df, "predict.data.new", major.inc=TRUE)
 
 ```
 ##                label step_major step_minor label_minor    bgn    end
-## 15 fit.data.training          7          1           1 47.843 50.709
-## 16  predict.data.new          8          0           0 50.710     NA
+## 15 fit.data.training          7          1           1 47.558 50.346
+## 16  predict.data.new          8          0           0 50.346     NA
 ##    elapsed
-## 15   2.866
+## 15   2.788
 ## 16      NA
 ```
 
@@ -3793,18 +3790,18 @@ glb_chunks_df <- myadd_chunk(glb_chunks_df, "predict.data.new", major.inc=TRUE)
 ![](DADHosp_SLR_base_files/figure-html/predict.data.new-1.png) ![](DADHosp_SLR_base_files/figure-html/predict.data.new-2.png) 
 
 ```
-##    PTID BODY.WEIGHT HOSPITAL.COST .src     .rnorm .recpos
-## 14    7          60        887350 Test -1.2300370      14
-## 4     2          41        809130 Test  0.9272271       4
-## 26   13          71        711616 Test -0.8164872      26
-## 2     1          49        660293 Test  1.4350423       2
-## 8     4          80        629990 Test  0.3679137       8
-##    HospCost.cut.fctr .lcn HOSPITAL.COST.Final.All.X..rcv.glmnet
-## 14     (3e+05,9e+05]  OOB                              289219.6
-## 4      (3e+05,9e+05]  OOB                              293087.0
-## 26     (3e+05,9e+05]  OOB                              284578.8
-## 2      (3e+05,9e+05]  OOB                              293860.4
-## 8      (3e+05,9e+05]  OOB                              291540.0
+##    PTID BODY.WEIGHT HOSPITAL.COST .src     .rnorm .pos HospCost.cut.fctr
+## 14    7          60        887350 Test -1.2300370   14     (3e+05,9e+05]
+## 4     2          41        809130 Test  0.9272271    4     (3e+05,9e+05]
+## 26   13          71        711616 Test -0.8164872   26     (3e+05,9e+05]
+## 2     1          49        660293 Test  1.4350423    2     (3e+05,9e+05]
+## 8     4          80        629990 Test  0.3679137    8     (3e+05,9e+05]
+##    .lcn HOSPITAL.COST.Final.All.X..rcv.glmnet
+## 14  OOB                              289219.6
+## 4   OOB                              293087.0
+## 26  OOB                              284578.8
+## 2   OOB                              293860.4
+## 8   OOB                              291540.0
 ##    HOSPITAL.COST.Final.All.X..rcv.glmnet.err
 ## 14                                  598130.4
 ## 4                                   516043.0
@@ -3846,16 +3843,25 @@ glb_chunks_df <- myadd_chunk(glb_chunks_df, "predict.data.new", major.inc=TRUE)
 ```
 
 ```
-##   min.RMSE.OOB max.R.sq.OOB max.Adj.R.sq.fit min.RMSE.fit
-## 3     66699.91  0.702756152               NA      73485.1
-## 2    106143.81  0.247248356     0.2438159028     105953.9
-## 4    106176.62  0.246782831     0.2406441937     106228.6
-## 5    106176.62  0.246782831     0.2406441937     106228.6
-## 1    122798.07 -0.007501072     0.0007949678     122043.6
+##                            min.RMSE.OOB max.R.sq.OOB max.Adj.R.sq.fit
+## Max.cor.Y##rcv#rpart           66699.91  0.702756152               NA
+## Max.cor.Y.rcv.1X1###glmnet    106143.81  0.247248356     0.2438159028
+## Low.cor.X##rcv#glmnet         106176.62  0.246782831     0.2406441937
+## All.X##rcv#glmnet             106176.62  0.246782831     0.2406441937
+## MFO###lm                      122798.07 -0.007501072     0.0007949678
+##                            min.RMSE.fit
+## Max.cor.Y##rcv#rpart            73485.1
+## Max.cor.Y.rcv.1X1###glmnet     105953.9
+## Low.cor.X##rcv#glmnet          106228.6
+## All.X##rcv#glmnet              106228.6
+## MFO###lm                       122043.6
 ```
 
 ```
 ## [1] "All.X##rcv#glmnet OOB RMSE: 106176.6222"
+```
+
+```
 ##               .freqRatio.Fit .freqRatio.OOB .freqRatio.Tst .n.Fit .n.OOB
 ## (3e+05,9e+05]      0.1370968      0.1370968      0.1370968     34     34
 ## [0,1e+05]          0.0766129      0.0766129      0.0766129     19     19
@@ -3890,7 +3896,10 @@ glb_chunks_df <- myadd_chunk(glb_chunks_df, "predict.data.new", major.inc=TRUE)
 ## err.abs.trn.mean  err.abs.OOB.sum  err.abs.fit.sum  err.abs.new.sum 
 ##         382024.1       19220169.2       19230997.8       19220169.2 
 ##  err.abs.trn.sum 
-##       19230997.8 
+##       19230997.8
+```
+
+```
 ## [1] "Final.All.X##rcv#glmnet prediction stats for glbObsNew:"
 ##                  id max.R.sq.new min.RMSE.new max.Adj.R.sq.new
 ## 1 All.X##rcv#glmnet    0.2467828     106176.6        0.2406341
@@ -3912,11 +3921,11 @@ glb_chunks_df <- myadd_chunk(glb_chunks_df, "predict.data.new", major.inc=TRUE)
 ![](DADHosp_SLR_base_files/figure-html/predict.data.new-4.png) 
 
 ```
-##                   label step_major step_minor label_minor    bgn    end
-## 16     predict.data.new          8          0           0 50.710 58.563
-## 17 display.session.info          9          0           0 58.563     NA
+##                   label step_major step_minor label_minor    bgn  end
+## 16     predict.data.new          8          0           0 50.346 57.9
+## 17 display.session.info          9          0           0 57.901   NA
 ##    elapsed
-## 16   7.853
+## 16   7.554
 ## 17      NA
 ```
 
@@ -3932,40 +3941,40 @@ We reject the null hypothesis i.e. we have evidence to conclude that am_fctr imp
 
 ```
 ##                      label step_major step_minor label_minor    bgn    end
-## 10              fit.models          6          0           0 22.417 33.504
-## 16        predict.data.new          8          0           0 50.710 58.563
-## 12              fit.models          6          2           2 37.775 44.177
-## 1              import.data          1          0           0  9.947 14.796
-## 11              fit.models          6          1           1 33.505 37.774
-## 13              fit.models          6          3           3 44.178 47.413
-## 2             inspect.data          2          0           0 14.796 18.025
-## 15       fit.data.training          7          1           1 47.843 50.709
-## 9          select.features          5          0           0 21.000 22.417
-## 5         extract.features          3          0           0 18.992 20.347
-## 3               scrub.data          2          1           1 18.025 18.944
-## 6      manage.missing.data          3          1           1 20.348 20.800
-## 14       fit.data.training          7          0           0 47.414 47.842
-## 8  partition.data.training          4          0           0 20.850 20.999
-## 7             cluster.data          3          2           2 20.801 20.850
-## 4           transform.data          2          2           2 18.945 18.992
+## 10              fit.models          6          0           0 22.774 33.672
+## 16        predict.data.new          8          0           0 50.346 57.900
+## 12              fit.models          6          2           2 37.819 44.012
+## 1              import.data          1          0           0  9.558 15.196
+## 11              fit.models          6          1           1 33.673 37.819
+## 2             inspect.data          2          0           0 15.196 18.469
+## 13              fit.models          6          3           3 44.013 47.138
+## 15       fit.data.training          7          1           1 47.558 50.346
+## 9          select.features          5          0           0 21.378 22.774
+## 5         extract.features          3          0           0 19.439 20.762
+## 3               scrub.data          2          1           1 18.469 19.393
+## 6      manage.missing.data          3          1           1 20.762 21.190
+## 14       fit.data.training          7          0           0 47.139 47.557
+## 8  partition.data.training          4          0           0 21.234 21.378
+## 4           transform.data          2          2           2 19.393 19.438
+## 7             cluster.data          3          2           2 21.190 21.233
 ##    elapsed duration
-## 10  11.087   11.087
-## 16   7.853    7.853
-## 12   6.402    6.402
-## 1    4.849    4.849
-## 11   4.269    4.269
-## 13   3.236    3.235
-## 2    3.229    3.229
-## 15   2.866    2.866
-## 9    1.417    1.417
-## 5    1.355    1.355
-## 3    0.919    0.919
-## 6    0.453    0.452
-## 14   0.429    0.428
-## 8    0.150    0.149
-## 7    0.049    0.049
-## 4    0.047    0.047
-## [1] "Total Elapsed Time: 58.563 secs"
+## 10  10.898   10.898
+## 16   7.554    7.554
+## 12   6.193    6.193
+## 1    5.638    5.638
+## 11   4.146    4.146
+## 2    3.273    3.273
+## 13   3.125    3.125
+## 15   2.788    2.788
+## 9    1.396    1.396
+## 5    1.323    1.323
+## 3    0.924    0.924
+## 6    0.428    0.428
+## 14   0.418    0.418
+## 8    0.144    0.144
+## 4    0.045    0.045
+## 7    0.043    0.043
+## [1] "Total Elapsed Time: 57.9 secs"
 ```
 
 ![](DADHosp_SLR_base_files/figure-html/display.session.info-1.png) 
@@ -3977,11 +3986,11 @@ We reject the null hypothesis i.e. we have evidence to conclude that am_fctr imp
 ## 2               fit.models_0_MFO          1          1 myMFO_classfr
 ## 1               fit.models_0_bgn          1          0         setup
 ##      bgn    end elapsed duration
-## 3 24.965 29.535   4.570    4.570
-## 4 29.536 33.494   3.958    3.958
-## 2 22.913 24.964   2.051    2.051
-## 1 22.883 22.913   0.030    0.030
-## [1] "Total Elapsed Time: 33.494 secs"
+## 3 25.324 29.808   4.484    4.484
+## 4 29.808 33.663   3.855    3.855
+## 2 23.268 25.323   2.056    2.055
+## 1 23.238 23.267   0.029    0.029
+## [1] "Total Elapsed Time: 33.663 secs"
 ```
 
 ![](DADHosp_SLR_base_files/figure-html/display.session.info-2.png) 

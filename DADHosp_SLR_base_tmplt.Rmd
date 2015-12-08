@@ -141,6 +141,7 @@ require(dplyr)
 
 # Analysis control global variables
 # Inputs
+#   url/name = "<obsTrnFileName>"; sep = choose from c(NULL, "\t")
 glbObsTrnFile <- list(url = NULL, name = "DADHosp_Cost.txt", sep = "\t")
 glbObsNewFileName <- "<obsNewFileName>"
 glbInpMerge <- NULL #: default
@@ -273,10 +274,7 @@ glbFeatsDerive <- list();
 
     # numeric
 # Create feature based on record position/id in data   
-# glbFeatsDerive[["dummy.my"]] <- list(
-#     mapfn = function(UniqueID) { return(UniqueID) }       
-#     , args = c("UniqueID"))    
-glbFeatsDerive[[".recpos"]] <- list(
+glbFeatsDerive[[".pos"]] <- list(
     mapfn = function(.rnorm) { return(1:length(.rnorm)) }       
     , args = c(".rnorm"))    
 
@@ -299,7 +297,8 @@ glbFeatsDerive[["HospCost.cut.fctr"]] <- list(
 #print(summary(glbObsAll$WordCount))
 #print(summary(mapfn(glbObsAll$WordCount)))
     
-#     mapfn = function(Rasmussen) { return(ifelse(sign(Rasmussen) >= 0, 1, 0)) } 
+#     mapfn = function(HOSPI.COST) { return(cut(HOSPI.COST, 5, breaks = c(0, 100000, 200000, 300000, 900000), labels = NULL)) }         
+#     mapfn = function(Rasmussen)  { return(ifelse(sign(Rasmussen) >= 0, 1, 0)) } 
 #     mapfn = function(startprice) { return(startprice ^ (1/2)) }       
 #     mapfn = function(startprice) { return(log(startprice)) }   
 #     mapfn = function(startprice) { return(exp(-startprice / 20)) }
